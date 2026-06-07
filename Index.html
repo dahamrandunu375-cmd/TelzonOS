@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telzon UI 11.0 Pro - iPhone Frame & AOD Edition</title>
+    <style>
+        :root {
+            --wp-home: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop');
+            --wp-lock: url('https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?q=80&w=1000&auto=format&fit=crop');
+            --panel-bg: rgba(22, 22, 28, 0.75);
+            --blur-val: 25px;
+            --ios-ease: cubic-bezier(0.25, 1, 0.5, 1);
+            --ios-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --cc-bg: rgba(20, 20, 25, 0.65);
+            --cc-blur: 35px;
+            --active-color: #007aff;
+            --inactive-bg: rgba(255, 255, 255, 0.12);
+        }
+
+        body {
+            margin: 0; padding: 0; background-color: #08080a;
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+            color: #ffffff; overflow: hidden; user-select: none; -webkit-user-select: none;
+        }
+
+ .phone-frame {
+    width: 360px; height: 760px;
+    background-color: #000;
+    border-radius: 57px; /* iPhone rounded corners */
+    border: 6px solid #111;
+    box-shadow: 0 0 0 2px #333, 0 0 0 5px #555, 0 20px 70px rgba(0, 0, 0, 0.95);
+    position: relative; overflow: hidden; display: flex; flex-direction: column;
+} /* <--- මෙන්න මේ වරහන අනිවාර්යයෙන් දාන්න ඕනේ!
+        /* 🔋 Power Button on Right Side */
+        .power-btn {
+           position: absolute;
+           right: -8px;
+           top: 140px;
+             width: 10px;
+           height: 55px;
+          background-color: #444;
+          border-radius: 0 5px 5px 0;
+            cursor: pointer;
+           z-index: 1000;
+        }
+        .power-btn:active { background-color: #666; }
+
+       /* Screen Area */
+       .screen {
+           flex: 1;
+           background: var(--screen-bg) no-repeat center center/cover;
+          border-radius: 36px;
+          overflow: hidden;
+        position: relative;
+           display: flex;
+           flex-direction: column;
+       }
+}
+/* මේ තියෙන්නේ Power Button එකේ හැඩය සහ පාට */
+.power-button-hardware {
+    position: absolute;
+    right: -15px; /* ෆෝන් එකෙන් දකුණු පැත්තට එළියට පනින්න ඕන ගාණ */
+    top: 220px; /* උඩ ඉඳන් පහළට තියෙන දුර */
+    width: 15px; /* බටන් එකේ පළල */
+    height: 65px; /* බටන් එකේ දිග */
+    background-color: #111; /* කළු පාටට හුරු පාටක් */
+    border: 20px solid #333;
+    border-left: none; /* ෆෝන් එක පැත්තට බෝඩර් එකක් ඕන නෑ */
+    border-radius: 0 8px 8px 0; /* දකුණු පැත්තේ මුළු දෙක විතරක් රවුම් කරනවා */
+    cursor: pointer;
+    z-index: 100;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.5); /* පොඩි ශැඩෝ එකක් */
+}
+
+
+        }
+
+        /* POWER BUTTON ADDED */
+        .power-button {
+            position: absolute;
+            right: -15px; 
+            top: 200px;
+            width: 4px;
+            height: 65px;
+            background-color: #555;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+            box-shadow: inset 1px 0 2px rgba(255,255,255,0.2);
+            transition: 0.1s;
+            z-index: 300;
+        }
+        .power-button:active { right: -6px; width: 5px; }
+
+        .phone-wallpaper {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: var(--wp-home); background-size: cover; background-position: center;
+            z-index: 1; transition: background 0.5s ease;
+        }
+
+        /* ALWAYS ON DISPLAY LAYER */
+        .aod-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.85); /* Black with faint wallpaper showing */
+            color: rgba(255, 255, 255, 0.75);
+            z-index: 250; 
+            display: flex; flex-direction: column; align-items: center; padding-top: 120px;
+            opacity: 1; transition: opacity 0.4s ease, visibility 0.4s;
+            backdrop-filter: blur(2px);
+        }
+        .aod-layer.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        
+        /* BLACKOUT SCREEN FOR POWER OFF */
+        .screen-blackout {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #000; z-index: 299;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s; pointer-events: none;
+        }
+        .screen-blackout.active { opacity: 1; visibility: visible; pointer-events: auto; }
+
+        .aod-time { font-size: 65px; font-weight: 200; letter-spacing: 2px; margin-bottom: 5px; }
+        .aod-date { font-size: 14px; margin-bottom: 20px; opacity: 0.8; font-weight: 500;}
+        
+        .aod-battery { display: flex; align-items: center; gap: 8px; font-size: 14px; opacity: 0.9; }
+        .battery-icon { width: 22px; height: 11px; border: 1px solid currentColor; border-radius: 3px; position: relative; padding: 1px; }
+        .battery-icon::after { content: ''; position: absolute; right: -3px; top: 2px; width: 2px; height: 5px; background: currentColor; border-radius: 0 2px 2px 0; }
+        .battery-level { height: 100%; background: currentColor; border-radius: 1px; width: 100%; transition: width 0.3s; }
+
+        /* FIXED STATUS BAR */
+        .system-status-bar {
+            position: absolute; top: 0; left: 0; width: 100%; height: 38px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 24px 0 24px; box-sizing: border-box; z-index: 200;
+            font-size: 13px; font-weight: 600; color: #ffffff; pointer-events: none;
+        }
+        .status-bar-left { color: #ffffff; letter-spacing: 0.5px; font-weight: 700; }
+        .status-bar-right { display: flex; gap: 8px; align-items: center; }
+
+        /* DOUBLE DROP DOWN TOUCH GESTURE ZONES */
+        .status-touch-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 40px;
+            z-index: 210; display: flex;
+        }
+        .touch-zone-left { flex: 1; height: 100%; cursor: pointer; }
+        .touch-zone-right { flex: 1; height: 100%; cursor: pointer; }
+
+        /* NOTIFICATION CENTER PANEL */
+        .notification-center {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 15, 20, 0.7); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            z-index: 185; padding: 60px 20px 20px 20px; box-sizing: border-box;
+            display: flex; flex-direction: column; gap: 14px;
+            transform: translateY(-100%); transition: transform 0.4s cubic-bezier(0.25, 1, 0.3, 1);
+        }
+        .notification-center.open { transform: translateY(0); }
+        .nc-header { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 5px; }
+        .nc-container { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1; padding-right: 2px; }
+        .nc-card { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255,255,255,0.05); padding: 14px; border-radius: 20px; display: flex; flex-direction: column; gap: 4px; }
+        .nc-card-top { display: flex; justify-content: space-between; align-items: center; font-size: 11px; opacity: 0.6; font-weight: 600; }
+        .nc-card-title { font-size: 13px; font-weight: bold; }
+        .nc-card-body { font-size: 12px; opacity: 0.85; line-height: 1.3; }
+
+        /* CONTROL CENTER */
+        .control-center {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--cc-bg); backdrop-filter: blur(var(--cc-blur)); -webkit-backdrop-filter: blur(var(--cc-blur));
+            z-index: 180; padding: 60px 20px 20px 20px; box-sizing: border-box;
+            display: flex; flex-direction: column; gap: 14px;
+            transform: translateY(-100%); transition: transform 0.4s cubic-bezier(0.25, 1, 0.3, 1);
+        }
+        .control-center.open { transform: translateY(0); }
+
+        .cc-top-actions { display: flex; justify-content: flex-end; gap: 18px; font-size: 18px; opacity: 0.9; margin-bottom: 5px; }
+        .cc-row-pills { display: flex; gap: 12px; height: 72px; }
+        .cc-pill { flex: 1; background: var(--inactive-bg); border-radius: 20px; display: flex; align-items: center; padding: 0 16px; gap: 10px; cursor: pointer; }
+        .cc-pill.active { background: var(--active-color); }
+        .cc-pill-icon { font-size: 22px; background: rgba(255,255,255,0.15); border-radius: 50%; width: 38px; height: 38px; display: flex; justify-content: center; align-items: center; }
+        .cc-pill-text { display: flex; flex-direction: column; font-size: 13px; font-weight: 600; }
+        .cc-pill-sub { font-size: 11px; opacity: 0.7; font-weight: 400; }
+
+        .cc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; background: rgba(0,0,0,0.25); padding: 16px; border-radius: 24px; }
+        .cc-circle { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
+        .cc-circle-btn { width: 52px; height: 52px; background: var(--inactive-bg); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; transition: all 0.25s ease; }
+        .cc-circle.active .cc-circle-btn { background: #fff; color: #000; }
+        .cc-circle-lbl { font-size: 11px; opacity: 0.8; text-align: center; }
+
+        .cc-mixed-row { display: flex; gap: 12px; height: 150px; }
+        .cc-sliders { display: flex; gap: 12px; flex: 1.2; }
+        .cc-slider-col { flex: 1; background: var(--inactive-bg); border-radius: 28px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 15px; }
+        .cc-slider-fill { position: absolute; bottom: 0; left: 0; width: 100%; background: #fff; z-index: 0; }
+        .cc-slider-icon { position: relative; z-index: 1; font-size: 18px; color: #000; }
+        .cc-cards { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+        .cc-card { flex: 1; background: var(--inactive-bg); border-radius: 16px; display: flex; align-items: center; padding: 0 14px; gap: 10px; font-size: 12px; font-weight: 600; }
+        .cc-media { background: var(--inactive-bg); border-radius: 20px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; }
+        .cc-close-handle { width: 60px; height: 5px; background: rgba(255,255,255,0.3); border-radius: 3px; margin: 10px auto 0 auto; cursor: pointer; }
+
+        /* PERFECT HYBRID LOCK SCREEN */
+        .lock-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: var(--wp-lock); background-size: cover; background-position: center;
+            z-index: 150; display: flex; flex-direction: column; align-items: center;
+            padding: 80px 24px 80px 24px; box-sizing: border-box;
+            transition: transform 0.45s cubic-bezier(0.25, 1, 0.3, 1);
+        }
+        .lock-screen.unlocked { transform: translateY(-100%) !important; pointer-events: none; }
+        .lock-time { font-size: 78px; font-weight: 700; line-height: 1; margin-bottom: 10px; text-align: center; margin-top: 40px; }
+        .lock-date { font-size: 19px; font-weight: 500; opacity: 0.95; margin-bottom: 40px; }
+        .unlock-btn-fallback {
+            background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3); padding: 14px 28px; border-radius: 30px;
+            font-size: 14px; font-weight: bold; color: #fff; cursor: pointer; margin-top: auto;
+        }
+
+        /* HOME SCREEN CONTENT */
+        .home-screen-content {
+            position: relative; width: 100%; height: calc(100% - 45px); top: 38px; z-index: 10;
+            display: flex; flex-direction: column; padding: 15px 18px; box-sizing: border-box;
+        }
+        .widget {
+            background: var(--panel-bg); backdrop-filter: blur(var(--blur-val));
+            border-radius: 24px; padding: 15px; margin-bottom: 15px; border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .widget-title { font-size: 14px; font-weight: bold; color: #ff9f43; margin-bottom: 4px; }
+        .widget-body { font-size: 11px; opacity: 0.85; line-height: 1.4; }
+
+         /* ALL APPS RESTORED FULL GRID MATRIX */
+        .apps-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: auto; }
+        .app-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+        .app-icon-shape {
+            width: 54px; height: 54px; border-radius: 15px; display: flex; justify-content: center; align-items: center; font-size: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25); transition: transform 0.1s ease;
+        }
+        .app-item:active .app-icon-shape { transform: scale(0.9); }
+        .app-lbl { font-size: 10px; margin-top: 6px; opacity: 0.95; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 70px; }
+
+        /* INTERACTIVE ZOOM WINDOW FOR ALL APPS */
+        .app-window {
+            position: absolute; top: 0; left: 0; width: 100%; height: calc(100% - 45px); background: #121216;
+            z-index: 130; border-radius: 36px 36px 0 0; display: flex; flex-direction: column; box-sizing: border-box;
+            transform: scale(0); opacity: 0; visibility: hidden;
+            transition: transform 0.42s var(--ios-spring), opacity 0.3s ease, visibility 0.42s;
+        }
+        .app-window.active { transform: scale(1) !important; opacity: 1 !important; visibility: visible !important; }
+        .app-window.closing { transform: scale(0) !important; opacity: 0 !important; visibility: hidden !important; }
+        
+        .window-header { padding: 40px 20px 15px 20px; font-size: 18px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; }
+        .window-close-dot { width: 24px; height: 24px; background: rgba(255,255,255,0.12); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 10px; cursor: pointer; }
+        .window-content { padding: 18px; flex: 1; overflow-y: auto; font-size: 14px; position: relative; }
+
+        /* SETTINGS SPECIFIC STYLES */
+        .settings-row { background: rgba(255, 255, 255, 0.05); padding: 14px 16px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 10px; font-size: 13px; }
+        .wp-thumb { width: 75px; height: 110px; border-radius: 12px; cursor: pointer; background-size: cover; background-position: center; border: 2px solid transparent; }
+        .wp-thumb:hover { border-color: #ff9f43; }
+
+        /* BROWSER INTERFACE */
+        .browser-container { display: flex; flex-direction: column; height: 100%; }
+        .browser-bar { display: flex; gap: 8px; margin-bottom: 10px; }
+        .browser-input { flex: 1; background: rgba(255,255,255,0.08); border: none; border-radius: 10px; padding: 8px 12px; color: #fff; font-size: 12px; outline: none; }
+        .browser-go { background: #ff9f43; border: none; border-radius: 10px; padding: 0 14px; color: #000; font-weight: bold; font-size: 12px; }
+        .browser-frame-wrapper { flex: 1; background: #fff; border-radius: 14px; overflow: hidden; min-height: 440px; }
+        .browser-iframe { width: 100%; height: 100%; border: none; }
+
+        /* MUSIC PLAYER */
+        .player-wrapper { display: flex; flex-direction: column; align-items: center; padding-top: 10px; }
+        .player-art { width: 140px; height: 140px; background: linear-gradient(135deg, #ff0055, #7000ff); border-radius: 20px; display: flex; justify-content: center; align-items: center; font-size: 55px; margin-bottom: 15px; }
+        .track-title { font-size: 17px; font-weight: bold; margin-bottom: 4px; text-align: center; }
+        .track-artist { font-size: 13px; color: #ff9f43; margin-bottom: 15px; }
+        .progress-container { width: 100%; display: flex; flex-direction: column; gap: 4px; margin-bottom: 15px; }
+        .progress-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.15); border-radius: 2px; }
+        .progress-fill { width: 55%; height: 100%; background: #ff0055; border-radius: 2px; }
+        .progress-time { display: flex; justify-content: space-between; font-size: 10px; color: #888; }
+        .player-controls { display: flex; align-items: center; gap: 30px; font-size: 22px; margin-bottom: 15px; }
+        .play-btn { width: 45px; height: 45px; background: #fff; color: #000; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 16px; }
+        .playlist-item { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 12px; }
+        .pl-playing { color: #ff0055; font-weight: bold; }
+
+        /* ADVANCED HARDWARE CAMERA INTERFACE */
+        .cam-viewport-wrapper { width: 100%; height: 410px; background: #000; border-radius: 20px; overflow: hidden; position: relative; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 0 30px rgba(0,0,0,0.8); }
+        .cam-video-element { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
+        .cam-overlay-indicator { position: absolute; top: 15px; left: 15px; background: rgba(255, 159, 67, 0.85); color: #000; padding: 4px 10px; border-radius: 10px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase; z-index: 5; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .cam-zoom-badge { position: absolute; bottom: 15px; background: rgba(0,0,0,0.6); color: #fff; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; border: 1px solid rgba(255,255,255,0.15); z-index: 5; }
+        
+        .cam-zoom-slider-box { display: flex; align-items: center; gap: 10px; width: 100%; margin: 12px 0 6px 0; background: rgba(255,255,255,0.04); padding: 8px 12px; border-radius: 14px; box-sizing: border-box; }
+        .cam-zoom-label { font-size: 11px; opacity: 0.6; font-weight: 600; width: 45px; }
+        .cam-zoom-slider { flex: 1; accent-color: #ff9f43; background: rgba(255,255,255,0.1); height: 5px; border-radius: 3px; outline: none; }
+        
+        .cam-modes-strip { display: flex; overflow-x: auto; gap: 16px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); scrollbar-width: none; -ms-overflow-style: none; scroll-behavior: smooth; }
+        .cam-modes-strip::-webkit-scrollbar { display: none; }
+        .cam-mode-item { font-size: 12px; font-weight: 600; color: #888; white-space: nowrap; cursor: pointer; transition: all 0.2s; padding: 2px 4px; }
+        .cam-mode-item.active { color: #ff9f43; transform: scale(1.1); font-weight: 700; }
+        .cam-mode-item.ai-core { color: #ffd700 !important; font-weight: bold; text-shadow: 0 0 8px rgba(255,215,0,0.4); }
+        .cam-mode-item.ai-core.active { transform: scale(1.15); border-bottom: 2px solid #ffd700; }
+
+        .cam-action-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 10px 0 10px; }
+        .cam-gallery-preview { width: 44px; height: 44px; border-radius: 50%; background: #222; border: 2px solid rgba(255,255,255,0.2); overflow: hidden; background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=100'); background-size: cover; background-position: center; }
+        .cam-shutter-trigger { width: 56px; height: 56px; border-radius: 50%; background: #fff; border: 4px solid #121216; box-shadow: 0 0 0 2px #fff; cursor: pointer; transition: transform 0.1s; }
+        .cam-shutter-trigger:active { transform: scale(0.9); }
+        .cam-flip-button { width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.08); border: none; color: #fff; font-size: 18px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: background 0.2s; }
+        .cam-flip-button:hover { background: rgba(255,255,255,0.15); }
+
+        /* HARDWARE NAVIGATION BAR */
+        .hardware-nav-bar {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 45px; background: #000000;
+            z-index: 140; display: flex; justify-content: space-around; align-items: center;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .nav-btn { width: 60px; height: 100%; display: flex; justify-content: center; align-items: center; font-size: 18px; color: #ffffff; opacity: 0.5; cursor: pointer; }
+        .nav-btn:active { opacity: 1; }
+    </style>
+</head>
+<body>
+
+    <div class="phone-frame" id="phone-container">
+        
+        <div class="power-button" id="hardware-power-btn"></div>
+
+        <div class="phone-wallpaper" id="global-wallpaper"></div>
+        
+        <div class="screen-blackout" id="screen-blackout"></div>
+
+        <div class="aod-layer" id="aod-screen">
+            <div class="aod-time" id="aod-time-display">12:00</div>
+            <div class="aod-date" id="aod-date-display">Wednesday, May 27</div>
+            <div class="aod-battery">
+                <span id="aod-battery-text">100%</span>
+                <div class="battery-icon"><div class="battery-level" id="aod-battery-level"></div></div>
+            </div>
+        </div>
+
+        <div class="system-status-bar">
+            <span class="status-bar-left">Live Demo 
+            </span>
+            <div class="status-bar-right"><span id="status-time">9:41</span> <span>📶</span> <span id="status-battery">🔋 95%</span></div>
+        </div>
+
+        <div class="status-touch-container" id="system-touch-bar">
+            <div class="touch-zone-left" id="nc-pull-trigger"></div>
+            <div class="touch-zone-right" id="cc-pull-trigger"></div>
+        </div>
+
+        <div class="notification-center" id="notification-center">
+            <div class="nc-header">Notifications</div>
+            <div class="nc-container">
+                <div class="nc-card">
+                    <div class="nc-card-top"><span>SYSTEM UPDATE</span> <span>Just Now</span></div>
+                    <div class="nc-card-title">Telzon UI 11.0 Implemented</div>
+                    <div class="nc-card-body">Dual-zone status pulls, advanced hardware camera integrations with AI support, and spring micro-engines are active.</div>
+                </div>
+                <div class="nc-card">
+                    <div class="nc-card-top"><span>සිරි කැන්දු MUSIC</span> <span>2m ago</span></div>
+                    <div class="nc-card-title">Now Streaming Original Tracks</div>
+                    <div class="nc-card-body">සිරි කැන්දු නිල ගීතය is currently queued and ready to play inside the dedicated panel.</div>
+                </div>
+                <div class="nc-card">
+                    <div class="nc-card-top"><span>MY ඔකපතන</span> <span>1h ago</span></div>
+                    <div class="nc-card-title">Optimal Soil Status Detected</div>
+                    <div class="nc-card-body">ගොවිජන සේවා Dashboard monitors report stable 64% optimal moisture retention values.</div>
+                </div>
+            </div>
+            <div class="cc-close-handle" id="nc-close-handle"></div>
+        </div>
+
+        <div class="control-center" id="control-center">
+            <div class="cc-top-actions"><span>✎</span> <span>⏻</span> <span>⚙</span></div>
+            <div class="cc-row-pills">
+                <div class="cc-pill active cc-toggle" data-type="wifi"><div class="cc-pill-icon">🛜</div><div class="cc-pill-text">Wi-Fi <span class="cc-pill-sub">LiveWeb</span></div></div>
+                <div class="cc-pill cc-toggle" data-type="bt"><div class="cc-pill-icon">ᛒ</div><div class="cc-pill-text">Bluetooth <span class="cc-pill-sub">Off</span></div></div>
+            </div>
+            <div class="cc-grid">
+                <div class="cc-circle cc-toggle active"><div class="cc-circle-btn">↻</div><div class="cc-circle-lbl">Auto rotate</div></div>
+                <div class="cc-circle cc-toggle"><div class="cc-circle-btn">📍</div><div class="cc-circle-lbl">Location</div></div>
+                <div class="cc-circle cc-toggle"><div class="cc-circle-btn">✈</div><div class="cc-circle-lbl">Flight mode</div></div>
+                <div class="cc-circle cc-toggle"><div class="cc-circle-btn">🔦</div><div class="cc-circle-lbl">Flashlight</div></div>
+                <div class="cc-circle cc-toggle"><div class="cc-circle-btn">📱</div><div class="cc-circle-lbl">Smart View</div></div>
+              
+            </div>
+            <div class="cc-mixed-row">
+                <div class="cc-sliders">
+                    <div class="cc-slider-col"><div class="cc-slider-fill" style="height: 70%;"></div><div class="cc-slider-icon">☀️</div></div>
+                </div>
+                <div class="cc-cards">
+                    <div class="cc-card"><span>⚙️</span> SmartThings</div>
+                    <div class="cc-card"><span>⏱️</span> Modes</div>
+                </div>
+            </div>
+            <div class="cc-close-handle" id="cc-close-handle"></div>
+        </div>
+
+        <div class="lock-screen" id="lock-screen">
+            <div class="lock-time" id="lock-time-display">09<br>41</div>
+            <div class="lock-date" id="lock-date-display">Tuesday, May 27</div>
+            <div class="unlock-btn-fallback" id="unlock-trigger-btn">Tap to Unlock</div>
+        </div>
+
+        <div class="home-screen-content">
+            <div class="widget">
+                <div class="widget-title">Telzon Super OS v11.0 Pro</div>
+                <div class="widget-body">ස්ටේටස් බාර් වම්පැත්තෙන් Notifications ද, දකුණුපැත්තෙන් Control Center ද එන අතර, කැමරා ඇප් එකට සැබෑ Hardware API, Zoom, Flip සහ Modes එකතු කර ඇත!</div>
+            </div>
+
+            <div class="apps-container">
+                <div class="app-item launchable" data-app-title="Browser">
+                    <div class="app-icon-shape" style="background: linear-gradient(135deg, #007aff, #00bfff);">🌐</div>
+                    <div class="app-lbl">Browser</div>
+                </div>
+                
+                <div class="app-item launchable" data-app-title="සිරි කැන්දු">
+                    <div class="app-icon-shape" style="background: linear-gradient(135deg, #ff0055, #8500ff);">🎵</div>
+                    <div class="app-lbl">සිරි කැන්දු</div>
+                </div>
+
+                <div class="app-item launchable" data-app-title="my ඔකපතන">
+                    <div class="app-icon-shape" style="background: linear-gradient(135deg, #4caf50, #2e7d32);">🌾</div>
+                    <div class="app-lbl">My ඔකපතන</div>
+                </div>
+
+                <div class="app-item launchable" data-app-title="Settings">
+                    <div class="app-icon-shape" style="background: #3a3a3c; border: 1px solid #555;">⚙️</div>
+                    <div class="app-lbl">Settings</div>
+                </div>
+
+                <div class="app-item launchable" data-app-title="Camera">
+                    <div class="app-icon-shape" style="background: linear-gradient(135deg, #a2a2a2, #555);">📷</div>
+                    <div class="app-lbl">Camera</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="app-window" id="global-app-window">
+            <div class="window-header">
+                <span id="window-title-element">App Window</span>
+                <div class="window-close-dot" id="window-close-trigger">✕</div>
+            </div>
+            <div class="window-content" id="window-content-injector"></div>
+        </div>
+
+        <div class="hardware-nav-bar">
+            <div class="nav-btn" id="nav-back">◀</div>
+            <div class="nav-btn" id="nav-home">●</div>
+            <div class="nav-btn" id="nav-recents">■</div>
+        </div>
+    </div>
+
+    <script>
+      const appInterfaces = {
+            "Browser": `
+                <div class="browser-container">
+                    <div class="browser-bar">
+                        <input type="text" class="browser-input" id="br-url-field" value="https://edupediya.lk">
+                        <button class="browser-go" id="br-search-trigger">Go</button>
+                    </div>
+                    <div class="browser-frame-wrapper">
+                        <iframe src="https://edupediya.lk" class="browser-iframe" id="browser-core-frame"></iframe>
+                    </div>
+                </div>
+            `,
+            "සිරි කැන්දු": `
+                <div class="player-wrapper">
+                    <div class="player-art">🎵</div>
+                    <div class="track-title">සිරි කැන්දු නිල ගීතය</div>
+                    <div class="track-artist">Telzon Studio Originals</div>
+                    <div class="progress-container">
+                        <div class="progress-bar"><div class="progress-fill"></div></div>
+                        <div class="progress-time"><span>1:42</span><span>3:50</span></div>
+                    </div>
+                    <div class="player-controls">
+                        <span>⏮</span> <div class="play-btn">⏸</div> <span>⏭</span>
+                    </div>
+                    <div class="playlist-item pl-playing"><span>01. සිරි කැන්දු (Title Track)</span> <span>3:50</span></div>
+                    <div class="playlist-item"><span>02. ඔකපතන සිහින නිම්නය</span> <span>4:12</span></div>
+                </div>
+            `,
+            "my ඔකපතන": `
+                <div>
+                    <h3 style="color:#4caf50; margin-top:0;">🌾 my ඔකපතන Dashboard</h3>
+                    <p style="font-size:13px; opacity:0.8;">ගොවිජන සේවා සහ වගා තොරතුරු කළමනාකරණ පද්ධතිය.</p>
+                    <div style="background:rgba(255,255,255,0.04); padding:12px; border-radius:12px; margin-bottom:10px;">
+                        <small style="color:#aaa;">වත්මන් තත්ත්වය</small>
+                        <div style="font-size:16px; font-weight:bold; margin-top:3px; color:#4caf50;">සාර්ථක අස්වැන්නක්! 100%</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.04); padding:12px; border-radius:12px;">
+                        <small style="color:#aaa;">පස් තෙතමනය</small>
+                        <div style="font-size:16px; font-weight:bold; margin-top:3px;">64% (ප්‍රශස්ත)</div>
+                    </div>
+                </div>
+            `,
+            "Settings": `
+               <div id="settings-main-view" style="display: flex; flex-direction: column;">
+               <div class="settings-row"
+                onclick="doxument.getElementById('settings-main-view').style.display='none'; document.getElementById('settings-wp-view').style.display='flex';"><div style=display:flex; align-items:center;
+                  gap:12px;"><span>🔊</span><div><b>Sound & Haptics</b><br><small style='opacity:0.6;'>Ringtones,haptic styles and more</small></div></div>
+                  <span></span>
+                  </div>
+                    <div class="settings-row" onclick="document.getElementById('settings-main-view').style.display='none'; document.getElementById('settings-wp-view').style.display='flex';">
+                        <div style="display:flex; align-items:center; gap:12px;"><span>🖼️</span> <div><b>Wallpaper & Style</b><br><small style='opacity:0.6;'>Change Background</small></div></div>
+                        <span>❯</span>
+                    </div>
+                    <div class="settings-row" onclick="document.getElementById('settings-main-view').style.display='none'; document.getElementById('settings-about-view').style.display='block';">
+                        <div style="display:flex; align-items:center; gap:12px;"><span>📱</span> <div><b>About Phone</b><br><small style='opacity:0.6;'>Model,feutures,and other</small></div></div>
+                        <span>❯</span>
+                    </div>
+                    
+                </div>
+                <div id="settings-wp-view" style="display: none; flex-direction: column; gap: 12px;">
+                    <div style="cursor:pointer; color:#ff9f43; font-weight:bold; margin-bottom:5px;" onclick="document.getElementById('settings-wp-view').style.display='none'; document.getElementById('settings-main-view').style.display='flex';">❮ Back</div>
+                    <div style="display:flex; gap:12px; justify-content:center;">
+                        <div class="wp-thumb" style="background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=200');" onclick="document.getElementById('global-wallpaper').style.backgroundImage='url(\\'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000\\')'"></div>
+                        <div class="wp-thumb" style="background-image: url('https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?q=80&w=200');" onclick="document.getElementById('global-wallpaper').style.backgroundImage='url(\\'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?q=80&w=1000\\')'"></div>
+                    </div>
+                </div>
+                <div id="settings-about-view" style="display: none;">
+                    <div style="cursor:pointer; color:#ff9f43; font-weight:bold; margin-bottom:12px;" onclick="document.getElementById('settings-about-view').style.display='none'; document.getElementById('settings-main-view').style.display='flex';">❮ Back</div>
+                    <p><b>Model Name:</b> Telzon T1 Pro</p>
+                    <p><b>Model Number:</b> TE-2345</p>
+                    <p><b>OS Version:</b> Telzon SuperOS 16</p>
+                    <p><b>Ram And Storage:</b> 16GB RAM / 512GB ROM</p>
+                    <p><b>CPU:</b> Snapdragon 8 Elite Gen 5</p>
+                    <p><b>Live Demo Created by:</b> Daham Randunu (Thina)</p>
+                </div>
+
+                <div id="settings-wp-view" style="display: none; flex-direction: column; gap: 12px;">
+                    <div style="cursor:pointer; color:#ff9f43; font-weight:bold; margin-bottom:5px;" onclick="document.getElementById('settings-wp-view').style.display='none'; document.getElementById('settings-main-view').style.display='flex';">❮ Back</div>
+                    <div style="display:flex; gap:12px; justify-content:center;">
+                        <div class="wp-thumb" style="background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=200');" onclick="document.getElementById('global-wallpaper').style.backgroundImage='url(\'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000\')'"></div>
+                        <div class="wp-thumb" style="background-image: url('https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?q=80&w=200');" onclick="document.getElementById('global-wallpaper').style.backgroundImage='url(\'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?q=80&w=1000\')'"></div>
+                    </div>
+                </div>
+                <div id="settings-about-view" style="display: none;">
+                    <div style="cursor:pointer; color:#ff9f43; font-weight:bold; margin-bottom:12px;" onclick="document.getElementById('settings-about-view').style.display='none'; document.getElementById('settings-main-view').style.display='flex';">❮ Back</div>
+                    <p><b>Model:</b> Telzon T1 Pro</p>
+                    <p><b>OS Version:</b> Telzon OS v10.0</p>
+                    <p><b>Ram and Storage:</b> 16GB RAM / 512GB ROM</p>
+                    <p><b>CPU:</b> Snapdragon 8 Elite Gen 5</p>
+                    <p><b><bottom>Demo Created by:</b> Daham Randunu (Thina)</p></bottom>
+                </div>
+            `,
+            "Camera": `
+                <div style="display: flex; flex-direction: column; height: 100%;">
+                    <div class="cam-viewport-wrapper">
+                        <div class="cam-overlay-indicator" id="cam-active-mode-label">AI Camera</div>
+                        <video class="cam-video-element" id="native-hardware-video" autoplay playsinline></video>
+                        <div class="cam-zoom-badge" id="cam-zoom-display-badge">1.0x</div>
+                    </div>
+
+                    <div class="cam-zoom-slider-box">
+                        <span class="cam-zoom-label">Zoom</span>
+                        <input type="range" class="cam-zoom-slider" id="hardware-zoom-control" min="10" max="80" value="10">
+                    </div>
+
+                    <div class="cam-modes-strip" id="camera-modes-scroller">
+                        <div class="cam-mode-item" onclick="selectCameraMode(this, 'Panorama')">Panorama</div>
+                        <div class="cam-mode-item" onclick="selectCameraMode(this, 'Portrait')">Portrait</div>
+                        <div class="cam-mode-item" onclick="selectCameraMode(this, 'Macro')">Macro</div>
+                        <div class="cam-mode-item ai-core active" onclick="selectCameraMode(this, 'AI Camera')">Ai Camera</div>
+                        <div class="cam-mode-item" onclick="selectCameraMode(this, 'Video')">Video</div>
+                        <div class="cam-mode-item" onclick="selectCameraMode(this, 'Slow Motion')">Slow Motion</div>
+                        <div class="cam-mode-item" onclick="selectCameraMode(this, 'Cinematic video')">Cinematic video</div>
+                    </div>
+
+                    <div class="cam-action-row">
+                        <div class="cam-gallery-preview"></div>
+                        <div class="cam-shutter-trigger" onclick="triggerShutterAnimation()"></div>
+                        <button class="cam-flip-button" id="hardware-camera-toggle-btn">🔄</button>
+                    </div>
+                </div>
+            `
+        };
+    </script>
+
+     <script>
+        // --- REAL TIME & BATTERY SYSTEM ---
+        function updateSystemTime() {
+            const now = new Date();
+            let h = now.getHours();
+            let m = now.getMinutes();
+            h = h < 10 ? '0' + h : h;
+            m = m < 10 ? '0' + m : m;
+            
+            const timeStr = `${h}:${m}`;
+            const timeStrSplit = `${h}<br>${m}`; // For Lock Screen
+            
+            const options = { weekday: 'long', month: 'long', day: 'numeric' };
+            const dateStr = now.toLocaleDateString('en-US', options);
+
+            document.getElementById('aod-time-display').innerHTML = timeStr;
+            document.getElementById('lock-time-display').innerHTML = timeStrSplit;
+            document.getElementById('status-time').innerText = timeStr;
+
+            document.getElementById('aod-date-display').innerText = dateStr;
+            document.getElementById('lock-date-display').innerText = dateStr;
+        }
+        setInterval(updateSystemTime, 1000);
+        updateSystemTime();
+
+        function updateSystemBattery(battery) {
+            const level = Math.round(battery.level * 100);
+            document.getElementById('aod-battery-text').innerText = `${level}%`;
+            document.getElementById('aod-battery-level').style.width = `${level}%`;
+            document.getElementById('status-battery').innerText = `🔋 ${level}%`;
+        }
+        if ('getBattery' in navigator) {
+            navigator.getBattery().then(battery => {
+                updateSystemBattery(battery);
+                battery.addEventListener('levelchange', () => updateSystemBattery(battery));
+            });
+        }
+
+        // --- POWER BUTTON & SCREEN STATES ---
+        const powerBtn = document.getElementById('hardware-power-btn');
+        const aodLayer = document.getElementById('aod-screen');
+        const blackoutLayer = document.getElementById('screen-blackout');
+        const lockScreen = document.getElementById('lock-screen');
+        
+        let displayState = 'AOD'; // States: 'OFF', 'AOD', 'AWAKE'
+        let isUnlocked = false;
+
+        powerBtn.addEventListener('click', () => {
+            if (displayState === 'OFF') {
+                // Turn on AOD
+                blackoutLayer.classList.remove('active');
+                aodLayer.classList.remove('hidden');
+                displayState = 'AOD';
+            } else {
+                // Turn screen completely off
+                blackoutLayer.classList.add('active');
+                displayState = 'OFF';
+                
+                // If it was unlocked, lock it again
+                if(isUnlocked) {
+                   lockScreen.classList.remove('unlocked');
+                   isUnlocked = false;
+                }
+            }
+        });
+
+        // Double click AOD -> Go to Lock Screen
+        aodLayer.addEventListener('dblclick', () => {
+            if (displayState === 'AOD') {
+                aodLayer.classList.add('hidden');
+                displayState = 'AWAKE';
+            }
+        });
+
+        // --- EXISTING UI LOGIC ---
+        const unlockBtn = document.getElementById('unlock-trigger-btn');
+        const controlCenter = document.getElementById('control-center');
+        const notificationCenter = document.getElementById('notification-center');
+        const ncPullTrigger = document.getElementById('nc-pull-trigger');
+        const ccPullTrigger = document.getElementById('cc-pull-trigger');
+        const ccCloseHandle = document.getElementById('cc-close-handle');
+        const ncCloseHandle = document.getElementById('nc-close-handle');
+        const globalWindow = document.getElementById('global-app-window');
+        const windowTitle = document.getElementById('window-title-element');
+        const windowContent = document.getElementById('window-content-injector');
+        const closeTrigger = document.getElementById('window-close-trigger');
+        const phone = document.getElementById('phone-container');
+
+        let lastTriggeredIcon = null;
+        let activeHardwareStream = null;
+        let activeFacingDirection = 'environment';
+
+        // 1. UNLOCK CONTROL
+        unlockBtn.addEventListener('click', () => {
+            lockScreen.style.transition = 'transform 0.45s cubic-bezier(0.25, 1, 0.3, 1)';
+            lockScreen.classList.add('unlocked');
+            isUnlocked = true;
+        });
+
+        // 2. DUAL ZONE STATUS TOP INTERACTION HANDLING
+        ncPullTrigger.addEventListener('click', () => { 
+            if(isUnlocked) {
+                controlCenter.classList.remove('open');
+                notificationCenter.classList.add('open'); 
+            }
+        });
+        
+        ccPullTrigger.addEventListener('click', () => { 
+            if(isUnlocked) {
+                notificationCenter.classList.remove('open');
+                controlCenter.classList.add('open'); 
+            }
+        });
+
+        ncCloseHandle.addEventListener('click', () => notificationCenter.classList.remove('open'));
+        ccCloseHandle.addEventListener('click', () => controlCenter.classList.remove('open'));
+
+        let panelsStartY = 0;
+        controlCenter.addEventListener('touchstart', (e) => { panelsStartY = e.touches[0].clientY; });
+        controlCenter.addEventListener('touchend', (e) => {
+            if(panelsStartY - e.changedTouches[0].clientY > 60) controlCenter.classList.remove('open');
+        });
+        
+        notificationCenter.addEventListener('touchstart', (e) => { panelsStartY = e.touches[0].clientY; });
+        notificationCenter.addEventListener('touchend', (e) => {
+            if(panelsStartY - e.changedTouches[0].clientY > 60) notificationCenter.classList.remove('open');
+        });
+
+        // 3. FULL APP LAUNCH WITH REAL iOS SPRING ANIMATIONS
+        const launchableApps = document.querySelectorAll('.launchable');
+        launchableApps.forEach(app => {
+            app.addEventListener('click', () => {
+                const appTitle = app.getAttribute('data-app-title');
+                lastTriggeredIcon = app;
+
+                const frameRect = phone.getBoundingClientRect();
+                const iconRect = app.getBoundingClientRect();
+                const xOrigin = (iconRect.left + iconRect.width / 2) - frameRect.left;
+                const yOrigin = (iconRect.top + iconRect.height / 2) - frameRect.top;
+
+                globalWindow.style.transformOrigin = `${xOrigin}px ${yOrigin}px`;
+                windowTitle.innerText = appTitle;
+                windowContent.innerHTML = appInterfaces[appTitle] || `<div><h3>${appTitle}</h3></div>`;
+                
+                globalWindow.classList.remove('closing');
+                globalWindow.classList.add('active');
+
+                if(appTitle === "Browser") setupBrowserLogic();
+                if(appTitle === "Camera") bootNativeHardwareCamera();
+            });
+        });
+
+        const closeActiveWindow = () => {
+            if (globalWindow.classList.contains('active')) {
+                killHardwareCameraStream();
+                if (lastTriggeredIcon) {
+                    const frameRect = phone.getBoundingClientRect();
+                    const iconRect = lastTriggeredIcon.getBoundingClientRect();
+                    const xOrigin = (iconRect.left + iconRect.width / 2) - frameRect.left;
+                    const yOrigin = (iconRect.top + iconRect.height / 2) - frameRect.top;
+                    globalWindow.style.transformOrigin = `${xOrigin}px ${yOrigin}px`;
+                }
+                globalWindow.classList.remove('active');
+                globalWindow.classList.add('closing');
+                setTimeout(() => { globalWindow.classList.remove('closing'); windowContent.innerHTML = ""; }, 380);
+            }
+        };
+
+        closeTrigger.addEventListener('click', closeActiveWindow);
+        document.getElementById('nav-home').addEventListener('click', () => { 
+            controlCenter.classList.remove('open'); 
+            notificationCenter.classList.remove('open'); 
+            closeActiveWindow(); 
+        });
+        document.getElementById('nav-back').addEventListener('click', () => { 
+            controlCenter.classList.remove('open'); 
+            notificationCenter.classList.remove('open'); 
+            closeActiveWindow(); 
+        });
+
+        function setupBrowserLogic() {
+            const inputField = document.getElementById('br-url-field');
+            const searchBtn = document.getElementById('br-search-trigger');
+            const coreIframe = document.getElementById('browser-core-frame');
+            searchBtn.addEventListener('click', () => {
+                let query = inputField.value.trim();
+                if (query !== "") {
+                    if(!query.startsWith('http://') && !query.startsWith('https://')) query = 'https://' + query;
+                    coreIframe.src = query;
+                }
+            });
+        }
+
+        // 4. HARDWARE CAMERA ENGINE (REAL STREAMS / FLIP / SLIDER ACCELERATORS)
+        async function bootNativeHardwareCamera() {
+            const videoOut = document.getElementById('native-hardware-video');
+            const flipToggle = document.getElementById('hardware-camera-toggle-btn');
+            const zoomSlider = document.getElementById('hardware-zoom-control');
+            const zoomBadge = document.getElementById('cam-zoom-display-badge');
+
+            killHardwareCameraStream();
+
+            const mediaConfiguration = {
+                audio: false,
+                video: {
+                    facingMode: activeFacingDirection,
+                    width: { ideal: 640 },
+                    height: { ideal: 480 }
+                }
+            };
+
+            try {
+               activeHardwareStream = await navigator.mediaDevices.getUserMedia(mediaConfiguration);
+                if(videoOut) {
+                    videoOut.srcObject = activeHardwareStream;
+                    if(activeFacingDirection === 'user') {
+                        videoOut.style.transform = "scaleX(-1)";
+                    } else {
+                        videoOut.style.transform = "scaleX(1)";
+                    }
+                }
+
+                const activeTrack = activeHardwareStream.getVideoTracks()[0];
+                const capOpt = activeTrack.getCapabilities ? activeTrack.getCapabilities() : {};
+
+                if(capOpt.zoom && zoomSlider) {
+                    zoomSlider.min = capOpt.zoom.min;
+                    zoomSlider.max = capOpt.zoom.max;
+                    zoomSlider.step = capOpt.zoom.step;
+                    zoomSlider.value = activeTrack.getSettings().zoom || capOpt.zoom.min;
+                    
+                    zoomSlider.oninput = async (e) => {
+                        const valFloat = parseFloat(e.target.value);
+                        zoomBadge.innerText = valFloat.toFixed(1) + "x";
+                        videoOut.style.transform = `scale(${1 + (valFloat - capOpt.zoom.min)/(capOpt.zoom.max - capOpt.zoom.min) * 2})`;
+                        try {
+                            await activeTrack.applyConstraints({ advanced: [{ zoom: valFloat }] });
+                        } catch(err){}
+                    };
+                } else if(zoomSlider) {
+                    zoomSlider.min = 10;
+                    zoomSlider.max = 40;
+                    zoomSlider.value = 10;
+                    zoomSlider.oninput = (e) => {
+                        const calculatedRatio = parseFloat(e.target.value) / 10;
+                        zoomBadge.innerText = calculatedRatio.toFixed(1) + "x";
+                        if(activeFacingDirection === 'user') {
+                            videoOut.style.transform = `scaleX(-1) scale(${calculatedRatio})`;
+                        } else {
+                            videoOut.style.transform = `scale(${calculatedRatio})`;
+                        }
+                    };
+                }
+
+            } catch(mediaException) {
+                console.warn("Camera stream initiated with software simulation placeholder logic: ", mediaException);
+                if(videoOut) {
+                    videoOut.poster = "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=600";
+                    videoOut.style.background = "#15151c";
+                }
+            }
+
+            if(flipToggle) {
+                flipToggle.onclick = () => {
+                    activeFacingDirection = (activeFacingDirection === 'environment') ? 'user' : 'environment';
+                    bootNativeHardwareCamera();
+                };
+            }
+        }
+
+        function killHardwareCameraStream() {
+            if(activeHardwareStream) {
+                activeHardwareStream.getTracks().forEach(track => {
+                    track.stop();
+                });
+                activeHardwareStream = null;
+            }
+        }
+
+        function selectCameraMode(element, targetModeName) {
+            document.querySelectorAll('.cam-mode-item').forEach(m => m.classList.remove('active'));
+            element.classList.add('active');
+            const lbl = document.getElementById('cam-active-mode-label');
+            if(lbl) {
+                lbl.innerText = targetModeName;
+                if(targetModeName === "AI Camera") {
+                    lbl.style.background = "rgba(255, 215, 0, 0.9)";
+                    lbl.style.color = "#000";
+                } else {
+                    lbl.style.background = "rgba(255, 159, 67, 0.85)";
+                    lbl.style.color = "#000";
+                }
+            }
+            element.parentNode.scrollTo({
+                left: element.offsetLeft - (element.parentNode.offsetWidth / 2) + (element.offsetWidth / 2),
+                behavior: 'smooth'
+            });
+        }
+
+        function triggerShutterAnimation() {
+            const viewport = document.querySelector('.cam-viewport-wrapper');
+            if(viewport) {
+                viewport.style.opacity = '0.3';
+                setTimeout(() => { viewport.style.opacity = '1'; }, 100);
+            }
+        }
+
+        document.querySelectorAll('.cc-toggle').forEach(btn => {
+            btn.addEventListener('click', (e) => { e.stopPropagation(); btn.classList.toggle('active'); });
+        });
+    </script>
+</body>
+</html>
